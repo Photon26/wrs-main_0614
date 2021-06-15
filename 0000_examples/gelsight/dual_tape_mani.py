@@ -7,13 +7,85 @@ import numpy as np
 import cv2
 import img_to_depth as itd
 
+video1 = cv2.VideoCapture(0)
+itd_cvter = itd.ImageToDepth()
+pixmm = itd_cvter.pix_to_mm
+
+def hm2pos(hm):
+    depth_max = np.max(hm)
+    hm_map = hm / depth_max * 255
+    hm_map = hm_map.astype('uint8')
+    img = hm_map
+    f = np.fft.fft2(img)
+    fshift = np.fft.fftshift(f)
+    magnitude_spectrum = 100 * np.log(np.abs(fshift))
+    rows, cols = img.shape
+    crow, ccol = int(rows / 2), int(cols / 2)
+    p = 30
+    fshift[crow - p:crow + p, ccol - p:ccol + p] = 0
+    f_ishift = np.fft.ifftshift(fshift)
+    img_back = np.fft.ifft2(f_ishift)
+    img_back = np.abs(img_back)
+    img_back = (img_back / np.amax(img_back) * 255).astype("uint8")
+
+    # apply canny edge detection
+    edges = cv2.Canny(img_back, 150, 200)
+
+    # get hough lines
+    result = img.copy()
+    lines = cv2.HoughLines(edges, 1, np.pi / 180, 100, min_theta=1)
+    # print(lines)
+    # Draw line on the image
+    result = cv2.cvtColor(result, cv2.COLOR_GRAY2RGB)
+    # print(cols, rows)
+    centerx = cols / 2
+    centery = rows / 2
+    if lines is None:
+        return None, None
+    for rho, theta in lines[0]:
+        a = np.cos(theta)
+        b = np.sin(theta)
+        x0 = a * rho
+        y0 = b * rho
+        x1 = int(x0 + 1000 * (-b))
+        y1 = int(y0 + 1000 * (a))
+        x2 = int(x0 - 1000 * (-b))
+        y2 = int(y0 - 1000 * (a))
+        cv2.line(result, (x1, y1), (x2, y2), (0, 0, 255), 1)
+
+    cv2.imshow("tst", result)
+    cv2.waitKey(50)
+    x0 = int(centerx)
+    y0 = int(rho / b - x0 / np.tan(theta))  # center of line
+    # print(x0,y0)
+    cv2.circle(result, (x0, y0), 50, (0, 0, 255), 1)
+
+    radius = min(rho, 10)
+    mask = np.zeros((rows, cols))
+    xq, yq = np.meshgrid(np.arange(cols), np.arange(rows))
+    xq = xq - x0
+    yq = yq - y0
+    rq = xq * xq + yq * yq
+    wq = yq + xq / np.tan(theta)
+
+    mask = (rq < radius * radius).astype('uint8')
+    mask1 = (wq > rho / np.sin(theta)).astype('uint8')
+    mask2 = (wq < rho / np.sin(theta)).astype('uint8')
+
+    mask1 = mask * mask1
+    mask2 = mask * mask2
+    sum_up = np.sum(mask1 * hm, 1)
+    sum_low = np.sum(mask2 * hm, 1)
+
+    dz = (y0 - centery) * pixmm
+    return dz, theta
+
+
 inner_rad = 75/2
 outer_rad = 99/2
 
 robot_instance = ur3d.UR3Dual()
-# ur_dual_x = ur3dx.UR3DualX(lft_robot_ip='10.2.0.50', rgt_robot_ip='10.2.0.51', pc_ip='10.2.0.100')
-
-
+ur_dual_x = ur3dx.UR3DualX(lft_robot_ip='10.2.0.50', rgt_robot_ip='10.2.0.51', pc_ip='10.2.0.100')
 
 base = wd.World(cam_pos=[2, 1, 3], lookat_pos=[0, 0, 1.1])
 gm.gen_frame().attach_to(base)
@@ -49,14 +121,13 @@ for theta in range(3,15):
 # rgt hand hold the tape
 # jnt_rgt = robot_s.ik("rgt_arm", ini_pos, ini_rot_rgt)
 ini_jnt_rgt = jnt_list[0]
-# ur_dual_x.rgt_arm_hnd.move_jnts(ini_jnt_rgt)
+ur_dual_x.rgt_arm_hnd.move_jnts(ini_jnt_rgt)
 
 #  loose lft hand a bit
 ini_pos_lft = ini_pos + np.dot(ini_rot_lft, np.array([0,0.005,0]))
 newjnt = robot_s.ik("lft_arm",ini_pos, ini_rot_lft, max_niter=1000)
 robot_s.fk("lft_arm", newjnt)
-# print(newjnt*180/np.pi)
-# ur_dual_x.lft_arm_hnd.move_jnts(newjnt)
+ur_dual_x.lft_arm_hnd.move_jnts(newjnt)
 robot_meshmodel = robot_s.gen_meshmodel(toggle_tcpcs=True)
 robot_meshmodel.attach_to(base)
 
