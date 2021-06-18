@@ -11,6 +11,7 @@ import time
 
 inner_rad = 75/2
 outer_rad = 99/2
+center_rad = (inner_rad+outer_rad)/2
 
 robot_instance = ur3d.UR3Dual()
 ur_dual_x = ur3dx.UR3DualX(lft_robot_ip='10.2.0.50', rgt_robot_ip='10.2.0.51', pc_ip='10.2.0.100')
@@ -35,11 +36,11 @@ ini_rot_rgt = np.array([[ 1, 0,  0],
 
 jnt_list = []
 pre_jnt = robot_s.ik("rgt_arm", ini_pos, ini_rot_rgt, max_niter=1000)
-for theta in range(3,15):
+for theta in range(3,9):
     rotmat = np.array([[np.cos(np.pi / 24 * theta + np.pi/4), 0, np.sin(np.pi / 24 * theta + np.pi/4)], [0, 1, 0],
                        [-np.sin(theta), 0, np.cos(np.pi / 4 * theta)]])
     rot = np.dot(rotmat, ini_rot_rgt)
-    pos = center + np.dot(rot, np.array([0, 0.001 * outer_rad, 0]))
+    pos = center + np.dot(rot, np.array([0, 0.001 * center_rad, 0]))
     newjnt_rgt = robot_s.ik("rgt_arm", pos, rot)
     if newjnt_rgt is None:
            newjnt_rgt = robot_s.ik("rgt_arm", pos, rot, pre_jnt, max_niter=1000)
@@ -50,12 +51,13 @@ for theta in range(3,15):
 # rgt hand hold the tape
 # jnt_rgt = robot_s.ik("rgt_arm", ini_pos, ini_rot_rgt)
 ini_jnt_rgt = jnt_list[0]
-ur_dual_x.rgt_arm_hnd.move_jnts(ini_jnt_rgt)
+# ur_dual_x.rgt_arm_hnd.move_jnts(ini_jnt_rgt)
 
 #  loose lft hand a bit
 # ini_pos_lft = ini_pos + np.dot(ini_rot_lft, np.array([0,0.005,0]))
 newjnt = robot_s.ik("lft_arm",ini_pos, ini_rot_lft, max_niter=1000)
 robot_s.fk("lft_arm", newjnt)
+print(newjnt/3.14*180)
 ur_dual_x.lft_arm_hnd.move_jnts(newjnt)
 ur_dual_x.lft_arm_hnd.close_gripper(speedpercentange=20, forcepercentage=0) #   gripper control
 

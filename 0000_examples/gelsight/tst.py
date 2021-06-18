@@ -28,16 +28,16 @@ print("shi fou peng zhuang",robot_instance.is_collided())
 robot_meshmodel = robot_instance.gen_meshmodel(toggle_tcpcs=True)
 robot_meshmodel.attach_to(base)
 
-pos = np.array([ 0.3, 0,  1.4])
-
-ini_rot_rgt = np.array([[ 1, 0,  0],
-       [ 0 , 0, 1],
-       [ 0,  -1,  0]])
-ini_rot_lft = np.array([[ 1, 0,  0],
-       [ 0 , 0, -1],
-       [ 0,  1,  0]])
-gm.gen_frame(pos=pose_hnd[0],rotmat=pose_hnd[1],length=0.4).attach_to(base)
-print(robot_instance.ik("lft_arm",tgt_pos=pose_hnd[0],tgt_rotmat=pose_hnd[1],seed_jnt_values=jnt,max_niter=1000))
+# pos = np.array([ 0.3, 0,  1.4])
+#
+# ini_rot_rgt = np.array([[ 1, 0,  0],
+#        [ 0 , 0, 1],
+#        [ 0,  -1,  0]])
+# ini_rot_lft = np.array([[ 1, 0,  0],
+#        [ 0 , 0, -1],
+#        [ 0,  1,  0]])
+# gm.gen_frame(pos=pose_hnd[0],rotmat=pose_hnd[1],length=0.4).attach_to(base)
+# print(robot_instance.ik("lft_arm",tgt_pos=pose_hnd[0],tgt_rotmat=pose_hnd[1],seed_jnt_values=jnt,max_niter=1000))
 base.run()
 
 
