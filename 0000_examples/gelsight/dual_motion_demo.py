@@ -43,7 +43,7 @@ jnt_list = []
 pre_jnt = robot_s.ik("rgt_arm", ini_pos, ini_rot_rgt, max_niter=1000)
 for theta in range(3,9):
     rotmat = np.array([[np.cos(np.pi / 24 * theta + np.pi/4), 0, np.sin(np.pi / 24 * theta + np.pi/4)], [0, 1, 0],
-                       [-np.sin(theta), 0, np.cos(np.pi / 4 * theta)]])
+                       [-np.sin(np.pi / 24 * theta + np.pi/4), 0, np.cos(np.pi / 24 * theta + np.pi/4)]])
     rot = np.dot(rotmat, ini_rot_rgt)
     pos = center + np.dot(rot, np.array([0, 0.001 * center_rad, 0]))
     newjnt_rgt = robot_s.ik("rgt_arm", pos, rot)
@@ -60,7 +60,8 @@ ur_dual_x.rgt_arm_hnd.move_jnts(ini_jnt_rgt)
 
 #  loose lft hand a bit
 # ini_pos_lft = ini_pos + np.dot(ini_rot_lft, np.array([0,0.005,0]))
-newjnt = robot_s.ik("lft_arm",ini_pos, ini_rot_lft, max_niter=1000)
+ini_pos_lft = ini_pos + np.dot(ini_rot_lft, np.array([0, 0, -0.04]))
+newjnt = robot_s.ik("lft_arm",ini_pos_lft, ini_rot_lft, max_niter=1000)
 robot_s.fk("lft_arm", newjnt)
 print(newjnt/3.14*180)
 ur_dual_x.lft_arm_hnd.move_jnts(newjnt)
@@ -76,7 +77,7 @@ for jnt in jnt_list:
         ur_dual_x.rgt_arm_hnd.move_jnts(jnt)
         robot_s.fk("rgt_arm", jnt)
         if count <2:
-            robot_meshmodel = robot_s.gen_meshmodel(toggle_tcpcs=True)
+            robot_meshmodel = robot_s.gen_meshmodel(toggle_tcpcs=False)
             robot_meshmodel.attach_to(base)
         count = count+1
 
