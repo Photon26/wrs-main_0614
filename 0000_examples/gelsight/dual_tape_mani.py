@@ -115,7 +115,7 @@ ini_rot_rgt = np.array([[ 1, 0,  0],
 
 jnt_list = []
 pre_jnt = robot_s.ik("rgt_arm", ini_pos, ini_rot_rgt, max_niter=1000)
-for theta in range(3,9):
+for theta in range(3,11):
     rotmat = np.array([[np.cos(np.pi / 24 * theta + np.pi/4), 0, np.sin(np.pi / 24 * theta + np.pi/4)], [0, 1, 0],
                        [-np.sin(np.pi / 24 * theta + np.pi/4), 0, np.cos(np.pi / 24 * theta + np.pi/4)]])
     rot = np.dot(rotmat, ini_rot_rgt)
@@ -138,15 +138,23 @@ newjnt = robot_s.ik("lft_arm",ini_pos_lft, ini_rot_lft, max_niter=1000)
 robot_s.fk("lft_arm", newjnt)
 print(newjnt/3.14*180)
 ur_dual_x.lft_arm_hnd.move_jnts(newjnt)
-ur_dual_x.lft_arm_hnd.close_gripper(speedpercentange=20, forcepercentage=0) #   gripper control
 # robot_meshmodel = robot_s.gen_meshmodel(toggle_tcpcs=False)
 # robot_meshmodel.attach_to(base)
 
+flag = 0  # 1 if edge is detected, 0 if no edge is detected.
 #  rotate rgt hand
 for jnt in jnt_list:
     if jnt is not None:
         print("*")
+        ur_dual_x.lft_arm_hnd.open_gripper(speedpercentange=20, forcepercentage=0, fingerdistance=40)  # gripper control
+        time.sleep(0.8)
         ur_dual_x.rgt_arm_hnd.move_jnts(jnt)
+        ur_dual_x.lft_arm_hnd.close_gripper(speedpercentange=20, forcepercentage=0)  # gripper control
+        time.sleep(0.5)
+        while ur_dual_x.lft_arm_hnd.arm.is_program_running():
+            pass
+
+        # time.sleep(0.5)
         robot_s.fk("rgt_arm", jnt)
         robot_meshmodel = robot_s.gen_meshmodel(toggle_tcpcs=False)
         robot_meshmodel.attach_to(base)
@@ -157,24 +165,29 @@ for jnt in jnt_list:
         # time.sleep(10)
         count = 0
         tic = time.time()
-        flag = 0  # 1 if edge is detected, 0 if no edge is detected.
-        while (dur < 1):
+
+        while (dur < 3):
             return_value, image = video1.read()
             depth, hm = itd_cvter.convert(image)
             dz, theta1 = hm2pos(hm)
-            print(theta1)
+            # print(theta1)
             if theta1 is not None:
                 if np.abs(theta1 - theta) < 3 / 180 * np.pi:
                     count = count + 1
                 else:
                     count = 0
                 theta = theta1
-                if count == 10:
+                if count == 4:
                     flag = 1
                     break
             dur = time.time() - tic
-
         if flag == 1:
+            print(theta)
+            print("hstql")
             break
+    if flag == 1:
+        break
+
+print(dz, theta1, flag)
 
 base.run()

@@ -209,9 +209,10 @@ class UR3Rtq85X(object):
 
 if __name__ == '__main__':
     import visualization.panda.world as wd
+    import time
 
-    base = wd.World(cam_pos=[3, 1, 2], lookat_pos=[0, 0, 0])
-    u3r85_x = UR3Rtq85X(robot_ip='10.2.0.51', pc_ip='10.2.0.100')
-    u3r85_x.close_gripper()
-    u3r85_x.open_gripper()
-    base.run()
+    # base = wd.World(cam_pos=[3, 1, 2], lookat_pos=[0, 0, 0])
+    u3r85_x = UR3Rtq85X(robot_ip='10.2.0.50', pc_ip='10.2.0.100')
+    # u3r85_x.close_gripper()
+    u3r85_x.open_gripper(fingerdistance=80)
+    # base.run()
