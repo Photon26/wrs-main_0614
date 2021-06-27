@@ -14,7 +14,7 @@ inner_rad = 75/2
 outer_rad = 99/2
 center_rad = (inner_rad+outer_rad)/2
 
-ur_dual_x = ur3dx.UR3DualX(lft_robot_ip='10.2.0.50', rgt_robot_ip='10.2.0.51', pc_ip='10.2.0.100')
+# ur_dual_x = ur3dx.UR3DualX(lft_robot_ip='10.2.0.50', rgt_robot_ip='10.2.0.51', pc_ip='10.2.0.100')
 
 base = wd.World(cam_pos=[2, 1, 3], lookat_pos=[0, 0, 1.1])
 gm.gen_frame().attach_to(base)
@@ -33,7 +33,7 @@ center = ini_pos + np.dot(ini_rot_lft, np.array([0, -0.001*center_rad, 0]))
 object = cm.CollisionModel("tape_2side_210618.stl")
 object.set_pos(center)
 object.set_rgba([.5, .7, .3, 1])
-# object.attach_to(base)
+object.attach_to(base)
 
 ini_rot_rgt = np.array([[ 1, 0,  0],
        [ 0 , 0, 1],
@@ -56,7 +56,7 @@ for theta in range(3,9):
 # rgt hand hold the tape
 # jnt_rgt = robot_s.ik("rgt_arm", ini_pos, ini_rot_rgt)
 ini_jnt_rgt = jnt_list[0]
-ur_dual_x.rgt_arm_hnd.move_jnts(ini_jnt_rgt)
+# ur_dual_x.rgt_arm_hnd.move_jnts(ini_jnt_rgt)
 
 #  loose lft hand a bit
 # ini_pos_lft = ini_pos + np.dot(ini_rot_lft, np.array([0,0.005,0]))
@@ -64,8 +64,8 @@ ini_pos_lft = ini_pos + np.dot(ini_rot_lft, np.array([0, 0, -0.04]))
 newjnt = robot_s.ik("lft_arm",ini_pos_lft, ini_rot_lft, max_niter=1000)
 robot_s.fk("lft_arm", newjnt)
 print(newjnt/3.14*180)
-ur_dual_x.lft_arm_hnd.move_jnts(newjnt)
-ur_dual_x.lft_arm_hnd.close_gripper(speedpercentange=20, forcepercentage=0) #   gripper control
+# ur_dual_x.lft_arm_hnd.move_jnts(newjnt)
+# ur_dual_x.lft_arm_hnd.close_gripper(speedpercentange=20, forcepercentage=0) #   gripper control
 # robot_meshmodel = robot_s.gen_meshmodel(toggle_tcpcs=False)
 # robot_meshmodel.attach_to(base)
 
@@ -74,7 +74,7 @@ count = 0
 for jnt in jnt_list:
     if jnt is not None:
         print("*")
-        ur_dual_x.rgt_arm_hnd.move_jnts(jnt)
+        # ur_dual_x.rgt_arm_hnd.move_jnts(jnt)
         robot_s.fk("rgt_arm", jnt)
         if count <2:
             robot_meshmodel = robot_s.gen_meshmodel(toggle_tcpcs=False)
