@@ -16,6 +16,14 @@ pixmm = itd_cvter.pix_to_mm
 def hm2pos(hm):
     depth_max = np.max(hm)
     hm_map = hm / depth_max * 255
+    border = 20
+
+    height = np.shape(hm_map)[1]
+    # hm_map[:border, :] = 0
+    # hm_map[height-border: height, :] = 0
+    # hm_map = hm_map[border:height-border, :]
+    # cv2.imwrite("111.jpg", hm_map)
+
     hm_map = hm_map.astype('uint8')
     img = hm_map
     f = np.fft.fft2(img)
@@ -23,19 +31,30 @@ def hm2pos(hm):
     magnitude_spectrum = 100 * np.log(np.abs(fshift))
     rows, cols = img.shape
     crow, ccol = int(rows / 2), int(cols / 2)
-    p = 30
+    p = 25
     fshift[crow - p:crow + p, ccol - p:ccol + p] = 0
     f_ishift = np.fft.ifftshift(fshift)
     img_back = np.fft.ifft2(f_ishift)
     img_back = np.abs(img_back)
     img_back = (img_back / np.amax(img_back) * 255).astype("uint8")
+    # cv2.imwrite("222.jpg", img_back)
 
     # apply canny edge detection
-    edges = cv2.Canny(img_back, 150, 200)
+    edges = cv2.Canny(img_back, 180, 200)
+    print(np.shape(edges))
+    edges = edges[border:height-border, :]
+    print(np.shape(edges))
+
+    # cv2.imshow(".",edges)
+    # cv2.waitKey(50)
 
     # get hough lines
     result = img.copy()
-    lines = cv2.HoughLines(edges, 1, np.pi / 180, 100, min_theta=1)
+    print(np.shape(result))
+    result = result[border:height-border, :]
+    # result = edges
+    print(np.shape(result))
+    lines = cv2.HoughLines(edges, 1, np.pi / 180, 20)
     # print(lines)
     # Draw line on the image
     result = cv2.cvtColor(result, cv2.COLOR_GRAY2RGB)
@@ -54,6 +73,9 @@ def hm2pos(hm):
         x2 = int(x0 - 1000 * (-b))
         y2 = int(y0 - 1000 * (a))
         cv2.line(result, (x1, y1), (x2, y2), (0, 0, 255), 1)
+        print(x1,y1,x2,y2)
+    if x1-x2 == 0:
+        return None, None
 
     cv2.imshow("tst", result)
     cv2.waitKey(50)
@@ -76,10 +98,12 @@ def hm2pos(hm):
 
     mask1 = mask * mask1
     mask2 = mask * mask2
-    sum_up = np.sum(mask1 * hm, 1)
-    sum_low = np.sum(mask2 * hm, 1)
+    # sum_up = np.sum(mask1 * hm, 1)
+    # sum_low = np.sum(mask2 * hm, 1)
 
     dz = (y0 - centery) * pixmm
+    if (theta > np.pi/4 and theta < np.pi/4*3) or (theta>5/4*np.pi and theta<7/4*np.pi):
+        return None, None
     return dz, theta
 
 
@@ -97,7 +121,7 @@ robot_s = ur3d.UR3Dual()
 pose_hnd = robot_s.get_gl_tcp(manipulator_name="lft_arm")
 # print(pose_hnd)
 
-ini_pos = np.array([0.3, 0,  1.4])
+ini_pos = np.array([0.3, 0.1,  1.4])
 ini_rot_lft = np.array([[ 1, 0,  0],
        [ 0 , 0, -1],
        [ 0,  1,  0]])
@@ -115,9 +139,9 @@ ini_rot_rgt = np.array([[ 1, 0,  0],
 
 jnt_list = []
 pre_jnt = robot_s.ik("rgt_arm", ini_pos, ini_rot_rgt, max_niter=1000)
-for theta in range(3,11):
-    rotmat = np.array([[np.cos(np.pi / 24 * theta + np.pi/4), 0, np.sin(np.pi / 24 * theta + np.pi/4)], [0, 1, 0],
-                       [-np.sin(np.pi / 24 * theta + np.pi/4), 0, np.cos(np.pi / 24 * theta + np.pi/4)]])
+for theta in range(3,7):
+    rotmat = np.array([[np.cos(np.pi / 15* theta + np.pi/4), 0, np.sin(np.pi / 15 * theta + np.pi/4)], [0, 1, 0],
+                       [-np.sin(np.pi / 15 * theta + np.pi/4), 0, np.cos(np.pi / 15 * theta + np.pi/4)]])
     rot = np.dot(rotmat, ini_rot_rgt)
     pos = center + np.dot(rot, np.array([0, 0.001 * center_rad, 0]))
     newjnt_rgt = robot_s.ik("rgt_arm", pos, rot)
@@ -133,6 +157,9 @@ flag = 0  # 1 if edge is detected, 0 if no edge is detected.
 
 while(True):
     ini_jnt_rgt = jnt_list[0]
+    time.sleep(0.5)
+    while ur_dual_x.rgt_arm_hnd.arm.is_program_running():
+        pass
     ur_dual_x.rgt_arm_hnd.move_jnts(ini_jnt_rgt)
     time.sleep(0.5)
     while ur_dual_x.rgt_arm_hnd.arm.is_program_running():
@@ -152,7 +179,7 @@ while(True):
     for jnt in jnt_list:
         if jnt is not None:
             print("*")
-            ur_dual_x.lft_arm_hnd.open_gripper(speedpercentange=20, forcepercentage=0, fingerdistance=40)  # gripper control
+            ur_dual_x.lft_arm_hnd.open_gripper(speedpercentange=20, forcepercentage=0, fingerdistance=50)  # gripper control
             time.sleep(0.8)
             ur_dual_x.rgt_arm_hnd.move_jnts(jnt)
             ur_dual_x.lft_arm_hnd.close_gripper(speedpercentange=20, forcepercentage=0)  # gripper control
@@ -172,7 +199,7 @@ while(True):
             count = 0
             tic = time.time()
 
-            while (dur < 3):
+            while (dur < 2.5):
                 return_value, image = video1.read()
                 depth, hm = itd_cvter.convert(image)
                 dz, theta1 = hm2pos(hm)
@@ -183,19 +210,44 @@ while(True):
                     else:
                         count = 0
                     theta = theta1
-                    if count == 4:
+                    if count == 5:
                         flag = 1
-                        break
+                        # break
                 dur = time.time() - tic
             if flag == 1:
                 print(theta)
                 break
         if flag == 1:
             break
+            # pass
 
     if flag == 1:
         break
-    ur_dual_x.rgt_arm_hnd.open_gripper(fingerdistance=40)
+        # pass
+    ur_dual_x.rgt_arm_hnd.open_gripper(fingerdistance=85)
+    print("UUUUUU")
 # base.run()
 print(theta1)
 
+inijnt = ur_dual_x.lft_arm_hnd.get_jnt_values()
+robot_s.lft_arm.fk(inijnt)
+pose_hnd = robot_s.get_gl_tcp(manipulator_name="lft_arm")
+pos_tape = pose_hnd[0]+np.dot(pose_hnd[1], np.array([-0.02,-0.008,0]))
+newjnt = robot_s.ik("lft_arm", pos_tape, pose_hnd[1], max_niter=10000)
+ur_dual_x.lft_arm_hnd.open_gripper(fingerdistance=40)
+time.sleep(0.5)
+while ur_dual_x.lft_arm_hnd.arm.is_program_running():
+    pass
+
+ur_dual_x.lft_arm_hnd.move_jnts((newjnt))
+
+inijnt = ur_dual_x.lft_arm_hnd.get_jnt_values()
+robot_s.lft_arm.fk(inijnt)
+pose_hnd = robot_s.get_gl_tcp(manipulator_name="lft_arm")
+pos_tape = pose_hnd[0]+np.dot(pose_hnd[1], np.array([0.02,0,0]))
+newjnt = robot_s.ik("lft_arm", pos_tape, pose_hnd[1], max_niter=10000)
+time.sleep(0.5)
+while ur_dual_x.lft_arm_hnd.arm.is_program_running():
+    pass
+
+ur_dual_x.lft_arm_hnd.move_jnts((newjnt))

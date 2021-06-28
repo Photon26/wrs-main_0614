@@ -489,7 +489,7 @@ if __name__ == "__main__":
     campara = pickle.load(open(folder+'/cam3_calib.pkl', 'rb'))
     maxcount = 10
 
-    # takeimg(folder, maxcount, 0)
+    takeimg(folder, maxcount, 0)
 
     BALL_MANUAL = 1
 

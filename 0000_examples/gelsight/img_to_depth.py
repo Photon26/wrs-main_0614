@@ -133,7 +133,7 @@ class ImageToDepth(object):
         xgrid, ygrid = np.meshgrid(x, y)
         d_ptcd[:, 0] = xgrid.flatten()
         d_ptcd[:, 1] = ygrid.flatten()
-        d_ptcd[:, 2] = hm.flatten()*5
+        d_ptcd[:, 2] = hm.flatten()*10
         return d_ptcd, hm
 
 if __name__ == "__main__":
