@@ -11,7 +11,7 @@ import numpy as np
 import visualization.panda.world as world
 from modeling.geometric_model import gen_pointcloud
 
-image = cv2.imread("cam2/t.jpg")
+image = cv2.imread("cam2/0713.jpg")
 frame = image
 itd_cvter = itd.ImageToDepth()
 depth, hm = itd_cvter.convert(frame)

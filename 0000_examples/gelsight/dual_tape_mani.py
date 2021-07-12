@@ -167,7 +167,7 @@ while(True):
     ur_dual_x.rgt_arm_hnd.close_gripper()
 
     # ini_pos_lft = ini_pos + np.dot(ini_rot_lft, np.array([0,0.005,0]))
-    ini_pos_lft = ini_pos + np.dot(ini_rot_lft, np.array([0, 0, -0.04]))
+    ini_pos_lft = ini_pos + np.dot(ini_rot_lft, np.array([0.005, 0, -0.045]))
     newjnt = robot_s.ik("lft_arm",ini_pos_lft, ini_rot_lft, max_niter=1000)
     robot_s.fk("lft_arm", newjnt)
     print(newjnt/3.14*180)
@@ -182,7 +182,7 @@ while(True):
             ur_dual_x.lft_arm_hnd.open_gripper(speedpercentange=20, forcepercentage=0, fingerdistance=50)  # gripper control
             time.sleep(0.8)
             ur_dual_x.rgt_arm_hnd.move_jnts(jnt)
-            ur_dual_x.lft_arm_hnd.close_gripper(speedpercentange=20, forcepercentage=0)  # gripper control
+            ur_dual_x.lft_arm_hnd.close_gripper(speedpercentange=20, forcepercentage=80)  # gripper control
             time.sleep(0.5)
             while ur_dual_x.lft_arm_hnd.arm.is_program_running():
                 pass
@@ -243,8 +243,11 @@ ur_dual_x.lft_arm_hnd.move_jnts((newjnt))
 
 inijnt = ur_dual_x.lft_arm_hnd.get_jnt_values()
 robot_s.lft_arm.fk(inijnt)
-pose_hnd = robot_s.get_gl_tcp(manipulator_name="lft_arm")
-pos_tape = pose_hnd[0]+np.dot(pose_hnd[1], np.array([0.02,0,0]))
+pose_hnd = ur_dual_x.lft_arm_hnd.get_jnt_values()
+pos_tape = pose_hnd[0]+np.dot(pose_hnd[1], np.array([0,0.01,0]))
+
+rot_lft = np.array([[0,-1,0],[0,0,-1],[1,0,0]])
+pos = pos_tape + np.dot(rot_lft, np.array([0.03, 0.006, -0.0257]))
 newjnt = robot_s.ik("lft_arm", pos_tape, pose_hnd[1], max_niter=10000)
 time.sleep(0.5)
 while ur_dual_x.lft_arm_hnd.arm.is_program_running():

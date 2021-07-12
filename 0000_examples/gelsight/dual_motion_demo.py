@@ -23,7 +23,7 @@ robot_s = ur3d.UR3Dual()
 pose_hnd = robot_s.get_gl_tcp(manipulator_name="lft_arm")
 # print(pose_hnd)
 
-ini_pos = np.array([0.3, 0,  1.4])
+ini_pos = np.array([0.3, 0.1,  1.35])
 ini_rot_lft = np.array([[ 1, 0,  0],
        [ 0 , 0, -1],
        [ 0,  1,  0]])
@@ -54,7 +54,7 @@ for theta in range(3,9):
 
 
 # rgt hand hold the tape
-# jnt_rgt = robot_s.ik("rgt_arm", ini_pos, ini_rot_rgt)
+# jnt_rgt = robot_s.ik("rgt_arm", ini_pos, ini_rot_rgt )
 ini_jnt_rgt = jnt_list[0]
 ur_dual_x.rgt_arm_hnd.move_jnts(ini_jnt_rgt)
 
@@ -80,6 +80,14 @@ for jnt in jnt_list:
             robot_meshmodel = robot_s.gen_meshmodel(toggle_tcpcs=True)
             robot_meshmodel.attach_to(base)
         count = count+1
-ur_dual_x.lft_arm_hnd.open_gripper(fingerdistance=85)
-ur_dual_x.rgt_arm_hnd.open_gripper(fingerdistance=85)
+# ur_dual_x.lft_arm_hnd.open_gripper(fingerdistance=85)
+# ur_dual_x.rgt_arm_hnd.open_gripper(fingerdistance=85)
+
+# ini_rot_lft = np.array([[ 1, 0,  0],
+#        [ 0 , 0, -1],
+#        [ 0,  1,  0]])
+# ini_pos = np.array([0.3, 0.1,  1.4])
+# newjnt = robot_s.ik("lft_arm",ini_pos, ini_rot_lft, max_niter=1000)
+# robot_s.fk("lft_arm", newjnt)
+
 base.run()

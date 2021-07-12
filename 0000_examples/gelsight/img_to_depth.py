@@ -126,7 +126,7 @@ class ImageToDepth(object):
         ImGradX, ImGradY, ImGradMag, ImGradDir = self._match_grd_bnz(self.lookup_table, I, self.f0)
         hm = self._fast_poisson(ImGradX, ImGradY) * self.pix_to_mm
         height, width = hm.shape[:2]
-        hm[hm < 0] = 0
+        # hm[hm < 0] = 0
         d_ptcd = np.zeros((height * width, 3))
         x = np.arange(width) * self.pix_to_mm
         y = np.arange(height) * self.pix_to_mm
