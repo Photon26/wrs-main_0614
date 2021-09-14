@@ -1,12 +1,12 @@
-import cv2
-import numpy as np
-
-cap = cv2.VideoCapture(0)
-while(True):
-    ret, frame = cap.read()
-    print(np.shape(frame))
-    cv2.imshow("tst", frame)
-    cv2.waitKey(1)
+# import cv2
+# import numpy as np
+#
+# cap = cv2.VideoCapture(0)
+# while(True):
+#     ret, frame = cap.read()
+#     print(np.shape(frame))
+#     cv2.imshow("tst", frame)
+#     cv2.waitKey(1)
 #
 
 # import numpy as np
@@ -43,7 +43,8 @@ while(True):
 # out2.release()
 # cv2.destroyAllWindows()
 
-from img_to_depth import ImageToDepth
+from calibrate_gelsight import takeimg
 import cv2
-import numpy as np
+
+takeimg("fisheye/cam3", 40)
 
