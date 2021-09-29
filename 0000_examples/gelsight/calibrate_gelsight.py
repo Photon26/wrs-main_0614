@@ -484,12 +484,12 @@ def takeimg(dir, num, camnum = 0, filename = None):
     camera.release()
 
 if __name__ == "__main__":
-    folder = "cam2"
+    folder = "cam3"
 
-    campara = pickle.load(open(folder+'/cam3_calib.pkl', 'rb'))
+    campara = pickle.load(open(folder+'/calib.pkl', 'rb'))
     maxcount = 10
 
-    takeimg(folder, maxcount, 0)
+    # takeimg(folder, maxcount, 0)b
 
     BALL_MANUAL = 1
 
@@ -501,13 +501,13 @@ if __name__ == "__main__":
     zeropoint = -90
     lookscale = 180
 
-    frame0 = cv2.imread(folder + "/0.jpg")
+    frame0 = cv2.imread(folder + "/pixmm.jpg")
     border = imgborder(frame0, 1, campara)
     f0 = iniFrame(frame0)
     f0 = f0[border[0]: border[1], border[2]: border[3], :]
     ImList = []
-    # border_1 = imgborder(frame0, 1, campara)
-    # Pixmm = 25/(border[3] - border[2])
+    border_1 = imgborder(frame0, 1, campara)
+    Pixmm = 10/(border[3] - border[2])
 
     gradmag = None
     gradir = None
@@ -541,6 +541,7 @@ if __name__ == "__main__":
                                                             zeropoint=zeropoint, lookscale=lookscale)
         print(np.amax(gradmag), np.amin(gradmag))
         print(np.amax(gradir), np.amin(gradir))
+
 
     GradMag, GradDir = LookuptableSmooth(bins, gradmag, gradir, countmap)
     GradX = -np.cos(GradDir) * GradMag
