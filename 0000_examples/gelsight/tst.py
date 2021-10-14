@@ -1,13 +1,8 @@
 import cv2
 import numpy as np
 
-cap = cv2.VideoCapture(2)
-while(True):
-    ret, frame = cap.read()
-    print(np.shape(frame))
-    cv2.imshow("tst", frame)
-    cv2.waitKey(1)
-
+from calibrate_gelsight import takeimg
+takeimg("cam3", 1, 1, "1011")
 
 # import numpy as np
 # import cv2

@@ -489,25 +489,27 @@ if __name__ == "__main__":
     campara = pickle.load(open(folder+'/calib.pkl', 'rb'))
     maxcount = 10
 
-    # takeimg(folder, maxcount, 0)b
+    # takeimg(folder, maxcount, 1)
 
     BALL_MANUAL = 1
 
     READ_RADIUS = 0
     BallRad = 11 / 2
-    Pixmm = 10/485*2
+    # Pixmm = 10/485*2
+
 
     bins = 80
     zeropoint = -90
     lookscale = 180
 
-    frame0 = cv2.imread(folder + "/pixmm.jpg")
+    frame0 = cv2.imread(folder + "/0.jpg")
     border = imgborder(frame0, 1, campara)
     f0 = iniFrame(frame0)
     f0 = f0[border[0]: border[1], border[2]: border[3], :]
     ImList = []
-    border_1 = imgborder(frame0, 1, campara)
-    Pixmm = 10/(border[3] - border[2])
+    # border_1 = imgborder(frame0, 1, campara)
+    Pixmm = 10/(315-89)
+    # Pixmm = 0.041237113402061855
 
     gradmag = None
     gradir = None

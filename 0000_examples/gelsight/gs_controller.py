@@ -5,12 +5,15 @@ import img_to_depth as itd
 import time
 
 base = wd.World(cam_pos=[.03, .03, .07], lookat_pos=[0.015, 0.015, 0])
-itd_cvter = itd.ImageToDepth(3)
+itd_cvter = itd.ImageToDepth(1)
 
 video1 = cv2.VideoCapture(1)
 width = (int(video1.get(cv2.CAP_PROP_FRAME_WIDTH)))
 height = (int(video1.get(cv2.CAP_PROP_FRAME_HEIGHT)))
 pointcloud = None
+
+fourcc1 = cv2.VideoWriter_fourcc('X', '2', '6', '4')
+out1 = cv2.VideoWriter('1012.mp4', fourcc1, 10.0, (640, 480), False)
 
 pcdm = []
 def update(video1, pcdm, task):
@@ -24,6 +27,7 @@ def update(video1, pcdm, task):
         video1.release()
         return task.done
     ret, frame = video1.read()
+    out1.write(frame)
     # cv2.imshow("tst", frame)
     # cv2.waitKey(0)
     frame = cv2.resize(frame, (int(width), int(height)), interpolation=cv2.INTER_CUBIC)

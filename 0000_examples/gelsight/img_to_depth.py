@@ -13,9 +13,9 @@ def fishye_calib(img, para):
 class ImageToDepth(object):
 
     def __init__(self, camnum):
-        if camnum == 2:
+        if camnum == 0:
             folder = "cam2"
-        elif camnum == 3:
+        elif camnum == 1:
             folder = "cam3"
         self.camera_parameter = pickle.load(open(folder + '/calib.pkl', 'rb'))
         self.lookup_table = pickle.load(open(folder + '/Lookuptable.pkl', 'rb'))
@@ -24,8 +24,8 @@ class ImageToDepth(object):
         f0 = self._init_frame(fishye_calib(frame0, self.camera_parameter))
         # self.f0 = f0[101: 381, 189: 472, :]   # cam2
         self.f0 = f0[self.border[0]: self.border[1], self.border[2]: self.border[3], :]
-        # self.pix_to_mm = self.lookup_table[7]
-        self.pix_to_mm = 2.5*6/286
+        self.pix_to_mm = self.lookup_table[7]
+        # self.pix_to_mm = 2.5*6/286
 
     def _init_frame(self, frame0):
         sigma = 50
@@ -129,7 +129,7 @@ class ImageToDepth(object):
         ImGradX, ImGradY, ImGradMag, ImGradDir = self._match_grd_bnz(self.lookup_table, I, self.f0)
         hm = self._fast_poisson(ImGradX, ImGradY) * self.pix_to_mm
         height, width = hm.shape[:2]
-        # hm[hm < 0] = 0
+        hm[hm < 0] = 0
         d_ptcd = np.zeros((height * width, 3))
         x = np.arange(width) * self.pix_to_mm
         y = np.arange(height) * self.pix_to_mm
