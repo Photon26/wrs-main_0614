@@ -2,7 +2,7 @@ import cv2
 import numpy as np
 
 from calibrate_gelsight import takeimg
-takeimg("cam3", 1, 1, "1011")
+takeimg("cam3", 1, 0, "1019")
 
 # import numpy as np
 # import cv2

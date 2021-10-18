@@ -2,8 +2,8 @@ import cv2
 import numpy as np
 import img_to_depth
 
-cap1 = cv2.VideoCapture(0)
-cap2 = cv2.VideoCapture(1)
+cap1 = cv2.VideoCapture(1)
+cap2 = cv2.VideoCapture(0)
 # cap3 = cv2.VideoCapture(2)
 itd_cvter1 = img_to_depth.ImageToDepth(0)
 itd_cvter2 = img_to_depth.ImageToDepth(1)
@@ -14,8 +14,8 @@ fourcc2 = cv2.VideoWriter_fourcc('X', '2', '6', '4')
 
 
 
-out1 = cv2.VideoWriter('tst3.mp4', fourcc1, 10.0, (484, 397), False)
-out2 = cv2.VideoWriter('tst4.mp4', fourcc2, 10.0, (448, 451), False)
+out1 = cv2.VideoWriter('tst1.mp4', fourcc1, 10.0, (484, 397), False)
+out2 = cv2.VideoWriter('tst2.mp4', fourcc2, 10.0, (448, 424), False)
 # out3 = cv2.VideoWriter('3.avi', fourcc2, 20.0, (640, 480))
 
 while(cap1.isOpened() and cap2.isOpened()):

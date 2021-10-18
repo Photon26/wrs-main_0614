@@ -489,7 +489,7 @@ if __name__ == "__main__":
     campara = pickle.load(open(folder+'/calib.pkl', 'rb'))
     maxcount = 10
 
-    # takeimg(folder, maxcount, 1)
+    takeimg(folder, maxcount, 0)
 
     BALL_MANUAL = 1
 
@@ -507,7 +507,7 @@ if __name__ == "__main__":
     f0 = iniFrame(frame0)
     f0 = f0[border[0]: border[1], border[2]: border[3], :]
     ImList = []
-    # border_1 = imgborder(frame0, 1, campara)
+    # border_1 = imgborder(fra me0, 1, campara)
     Pixmm = 10/(315-89)
     # Pixmm = 0.041237113402061855
 
