@@ -54,6 +54,7 @@ def driverProg():
 	socket_open("parameter_pc_ip", parameter_pc_port, "pc_socket")
 	textmsg("open pc connection")
     thread_servo = run servoThread()
+    thread_forcemode = run forcemodeThread()
     sqrt_jnts_scaler = sqrt(parameter_jnts_scaler)
     keepalive = 1
     conf_counter = 0
@@ -167,6 +168,7 @@ def driverProg():
     end
     write_port_register(200, 65534)
     kill thread_servo
+    kill thread_forcemode
     sync()
     socket_close("pc_socket")
 end

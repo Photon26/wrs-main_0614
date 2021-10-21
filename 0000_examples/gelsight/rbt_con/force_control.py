@@ -4,7 +4,7 @@ import robot_con.ur.program_builder as pb
 import struct
 import os
 import numpy as np
-import socket
+
 
 class UR3DualX(object):
     """
@@ -23,7 +23,7 @@ class UR3DualX(object):
         self._rgt_arm_hnd = u3r85x.UR3Rtq85X(robot_ip=rgt_robot_ip, pc_ip=pc_ip)
         self._pb = pb.ProgramBuilder()
         self._script_dir = os.path.dirname(__file__)
-        self._pb.load_prog(os.path.join(self._script_dir, "forcemode.script"))
+        self._pb.load_prog(os.path.join(self._script_dir, "urscripts_cbseries/moderndriver_cbseries_master.script"))
         self._master_modern_driver_urscript = self._pb.get_program_to_run()
         self._master_modern_driver_urscript = self._master_modern_driver_urscript.replace("parameter_pc_ip",
                                                                                           self._lft_arm_hnd.pc_server_socket_info[
@@ -42,6 +42,18 @@ class UR3DualX(object):
                                                                                         lft_robot_ip)
         self._slave_modern_driver_urscript = self._slave_modern_driver_urscript.replace("parameter_jnts_scaler",
                                                                                         str(self._lft_arm_hnd.jnts_scaler))
+
+        self._pb.load_prog(os.path.join(self._script_dir, "forcemode.script"))
+        self._force_mode_driver_urscript = self._pb.get_program_to_run()
+        self._force_mode_driver_urscript = self._force_mode_driver_urscript.replace("parameter_ip",
+                                                                                    self._lft_arm_hnd.pc_server_socket_info[
+                                                                                        0])
+        self._force_mode_driver_urscript = self._force_mode_driver_urscript.replace("parameter_port",
+                                                                                    self._lft_arm_hnd.pc_server_socket_info[
+                                                                                        1])
+        self._force_mode_driver_urscript = self._force_mode_driver_urscript.replace("parameter_jointscaler",
+                                                                                    str(self._lft_arm_hnd.jnts_scaler))
+
         print(self._slave_modern_driver_urscript)
 
     @property
@@ -145,46 +157,60 @@ class UR3DualX(object):
         else:
             raise ValueError("Component_name must be in ['all', 'lft_arm', 'rgt_arm']!")
 
-    def passive_move(self, jointspath, toolrelpose, timepathstep=1.0, inpfunc="cubic"):
-        urx_urmdsocket_ipad = ('10.2.0.100', 60011)
-        urx_urmdsocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        urx_urmdsocket.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
-        urx_urmdsocket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        urx_urmdsocket.bind(urx_urmdsocket_ipad)
-        urx_urmdsocket.listen(5)
-        jointspath = np.radians(np.asarray(jointspath)).tolist()
-        jointsradlisttimestep, _, _, x = self.pwp.interpolate_by_max_jntspeed(path=jointspath, control_frequency=0.002)
-        print(len(jointsradlisttimestep))
-        print("--------------passive move---------------")
-        print("path length:", len(jointspath))
-        print("path length inp:", len(jointsradlisttimestep))
-        self.__programbuilder.loadprog(self.__scriptpath + "/urforcemode.script")
-        prog = self.__programbuilder.ret_program_to_run()
-        prog = prog.replace("parameter_ip", urx_urmdsocket_ipad[0])
-        prog = prog.replace("parameter_port", str(urx_urmdsocket_ipad[1]))
-        prog = prog.replace("parameter_jointscaler", str(self.__jointscaler))
-        prog = prog.replace("parameter_toolrelpose", str(toolrelpose))
+    def force_mode_move(self,
+                         component_name,
+                         path,
+                         control_frequency=.008,
+                         interval_time=1.0,
+                         interpolation_method=None):
+        """
+        :param component_name
+        :param path: a list of 1x12 arrays or 1x6 arrays, depending on component_name
+        :param control_frequency: the program will sample time_interval/control_frequency confs, see motion.trajectory
+        :param interval_time: equals to expandis/speed, speed = degree/second
+                              by default, the value is 1.0 and the speed is expandis/second
+        :param interpolation_method
+        :return:
+        author: weiwei
+        date: 20210404
+        """
+        if component_name == "all":
+            self._lft_arm_hnd.trajt.set_interpolation_method(interpolation_method)
+            interpolated_confs, interpolated_spds = self._lft_arm_hnd.trajt.piecewise_interpolation(path,
+                                                                                                    control_frequency,
+                                                                                                    interval_time)
+            # upload a urscript to connect to the pc server started by this class
+            self._lft_arm_hnd.arm.send_program(self._force_mode_driver_urscript)
+            # accept arm socket
+            pc_server_socket, pc_server_socket_addr = self._lft_arm_hnd.pc_server_socket.accept()
+            print("PC server connected by ", pc_server_socket_addr)
+            # send trajectory
+            keepalive = 1
+            buf = bytes()
+            for id, conf in enumerate(interpolated_confs):
+                if id == len(interpolated_confs) - 1:
+                    keepalive = 0
+                jointsradint = [int(jnt_value * self._lft_arm_hnd.jnts_scaler) for jnt_value in conf]
+                buf += struct.pack('!iiiiiiiiiiiii', jointsradint[0], jointsradint[1], jointsradint[2],
+                                   jointsradint[3], jointsradint[4], jointsradint[5], jointsradint[6],
+                                   jointsradint[7], jointsradint[8], jointsradint[9], jointsradint[10],
+                                   jointsradint[11], keepalive)
+            pc_server_socket.send(buf)
+            pc_server_socket.close()
+        elif component_name in ["lft_arm", "lft_hnd"]:
+            self._lft_arm_hnd.move_jntspace_path(path=path,
+                                                 control_frequency=control_frequency,
+                                                 interval_time=interval_time,
+                                                 interpolation_method=interpolation_method)
+        elif component_name in ["rgt_arm", "rgt_hnd"]:
+            self._rgt_arm_hnd.move_jntspace_path(path=path,
+                                                 control_frequency=control_frequency,
+                                                 interval_time=interval_time,
+                                                 interpolation_method=interpolation_method)
+        else:
+            raise ValueError("Component_name must be in ['all', 'lft_arm', 'rgt_arm']!")
 
-        print(toolrelpose)
-        self.arm.send_program(prog)
 
-        # accept arm socket
-        urmdsocket, urmdsocket_addr = urx_urmdsocket.accept()
-        print("Connected by ", urmdsocket_addr)
-        keepalive = 1
-        buf = bytes()
-        print(len(jointsradlisttimestep))
-        for id, jointsrad in enumerate(jointsradlisttimestep):
-            if id == len(jointsradlisttimestep) - 1:
-                keepalive = 0
-            jointsradint = [int(jointrad * self.__jointscaler) for jointrad in jointsrad]
-            buf += struct.pack('!iiiiiii', jointsradint[0], jointsradint[1], jointsradint[2],
-                               jointsradint[3], jointsradint[4], jointsradint[5], keepalive)
-        urmdsocket.send(buf)
-
-        time.sleep(.5)
-        while self.arm.is_program_running():
-            pass
 
 if __name__ == '__main__':
     u3r85dx = UR3DualX(lft_robot_ip='10.2.0.50', rgt_robot_ip='10.2.0.51', pc_ip='10.2.0.100')
