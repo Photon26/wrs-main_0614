@@ -151,7 +151,7 @@ class TrajPoly(object):
                                   time_interval,
                                   math.floor(time_interval / control_frequency),
                                   endpoint=True) / time_interval
-            print("samples ", samples)
+            # print("samples ", samples)
             local_interpolated_confs, local_interplated_spds, local_interplated_accs = self.predict(samples)
             if id == len(passing_conf_list)-1:
                 interpolated_confs += local_interpolated_confs.tolist()

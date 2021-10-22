@@ -9,7 +9,7 @@ import threading
 import socket
 import struct
 import os
-import motion.trajectory as traj
+import motion.trajectory.polynomial_wrsold as traj
 
 
 class UR3Rtq85X(object):
@@ -52,7 +52,7 @@ class UR3Rtq85X(object):
                                                                             str(self._jnts_scaler))
         self._ftsensor_thread = None
         self._ftsensor_values = []
-        # self.trajt = traj.Trajectory(method='quintic')
+        self.trajt = traj.TrajPoly()
 
     @property
     def arm(self):
@@ -176,8 +176,8 @@ class UR3Rtq85X(object):
         author: weiwei
         date: 20210331
         """
-        self.trajt.set_interpolation_method(interpolation_method)
-        interpolated_confs, interpolated_spds = self.trajt.piecewise_interpolation(path, control_frequency,
+        # self._arm.trajt.set_interpolation_method(interpolation_method)
+        interpolated_confs, interpolated_spds, _ = self.trajt.piecewise_interpolation(path, control_frequency,
                                                                                    interval_time)
         # upload a urscript to connect to the pc server started by this class
         self._arm.send_program(self._modern_driver_urscript)

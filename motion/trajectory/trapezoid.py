@@ -9,7 +9,7 @@ class TrajTrap(object):
         self.predict = self._predict_max_acc
 
     def _fit_max_acc(self, conf0, spd0, conf1, spd1):
-        print(conf0, conf1)
+        # print(conf0, conf1)
         # assume max speed and check if it is needed in the given time interval
         self.avg_spd = self._max_spd * (np.sign((conf0 + conf1)) + ((conf0 + conf1) == 0))
         self.acc_begin = np.sign(self.avg_spd - spd0) * self._max_acc
@@ -29,7 +29,7 @@ class TrajTrap(object):
         # self.t_end[slctn] = (abs(self.avg_spd - spd1) / self._max_acc)[slctn]
         # self.t_middle[slctn] = 0
         # print(self._interval_time, self.t_begin, self.t_end)
-        print(self.t_middle, (self._interval_time - self.t_begin - self.t_end), self.t_begin, self.t_end)
+        # print(self.t_middle, (self._interval_time - self.t_begin - self.t_end), self.t_begin, self.t_end)
         if np.any(np.logical_and(self.t_middle > self._interval_time - self.t_begin - self.t_end, self.t_middle > 0)):
             # for those need that max speed, check if the max speed is fast enough to finish the given motion
             raise ValueError("The required time interval is too short!")
@@ -49,7 +49,7 @@ class TrajTrap(object):
                 sign = -np.ones_like(self.avg_spd)
                 loc_slctn = np.logical_and(self.t_middle > 1e-6, self._interval_time - self.t_begin - self.t_end > 0)
                 loc_slctn = np.logical_and(loc_slctn, self.t_middle > self._interval_time - self.t_begin - self.t_end)
-                print(loc_slctn)
+                # print(loc_slctn)
                 if np.any(loc_slctn):
                     sign[loc_slctn] = 1
                     cnter[np.logical_and(loc_slctn, not cnter_last[loc_slctn])] += 1
@@ -67,8 +67,8 @@ class TrajTrap(object):
                 begin_movement = spd0 * self.t_begin + (self.acc_begin * self.t_begin ** 2) / 2
                 end_movement = self.avg_spd * self.t_end + (self.acc_end * self.t_end ** 2) / 2
                 self.t_middle = (conf1 - conf0 - begin_movement - end_movement) / self.avg_spd
-                print(self.t_middle, self.t_begin, self.t_end, self.avg_spd)
-                print(self.t_middle, (self._interval_time - self.t_begin - self.t_end))
+                # print(self.t_middle, self.t_begin, self.t_end, self.avg_spd)
+                # print(self.t_middle, (self._interval_time - self.t_begin - self.t_end))
                 # print("xxxx")
                 # print(self.acc_begin)
                 # print(self.acc_end)
