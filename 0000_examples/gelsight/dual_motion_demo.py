@@ -56,7 +56,7 @@ for theta in range(3,9):
 # rgt hand hold the tape
 # jnt_rgt = robot_s.ik("rgt_arm", ini_pos, ini_rot_rgt )
 ini_jnt_rgt = jnt_list[0]
-ur_dual_x.rgt_arm_hnd.move_jnts(ini_jnt_rgt)
+# ur_dual_x.rgt_arm_hnd.move_jnts(ini_jnt_rgt)
 
 #  loose lft hand a bit
 # ini_pos_lft = ini_pos + np.dot(ini_rot_lft, np.array([0,0.005,0]))
@@ -64,8 +64,8 @@ ini_pos_lft = ini_pos + np.dot(ini_rot_lft, np.array([0, 0, -0.04]))
 newjnt = robot_s.ik("lft_arm",ini_pos_lft, ini_rot_lft, max_niter=1000)
 robot_s.fk("lft_arm", newjnt)
 print(newjnt/3.14*180)
-ur_dual_x.lft_arm_hnd.move_jnts(newjnt)
-ur_dual_x.lft_arm_hnd.close_gripper(speedpercentange=20, forcepercentage=0) #   gripper control
+# ur_dual_x.lft_arm_hnd.move_jnts(newjnt)
+# ur_dual_x.lft_arm_hnd.close_gripper(speedpercentange=20, forcepercentage=0) #   gripper control
 robot_meshmodel = robot_s.gen_meshmodel(toggle_tcpcs=False)
 robot_meshmodel.attach_to(base)
 

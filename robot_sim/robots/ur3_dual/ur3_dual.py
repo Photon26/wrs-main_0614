@@ -402,6 +402,7 @@ class UR3Dual(ri.RobotInterface):
         # examine length
         if component_name == 'lft_arm' or component_name == 'rgt_arm':
             if not isinstance(jnt_values, np.ndarray) or jnt_values.size != 6:
+                # print(isinstance(jnt_values, np.ndarray))
                 raise ValueError("An 1x6 npdarray must be specified to move a single arm!")
             update_component(component_name, jnt_values)
         elif component_name == 'both_arm':
