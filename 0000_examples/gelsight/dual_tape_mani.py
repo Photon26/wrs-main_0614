@@ -10,7 +10,7 @@ import img_to_depth as itd
 import time
 
 video1 = cv2.VideoCapture(0)
-itd_cvter = itd.ImageToDepth()
+itd_cvter = itd.ImageToDepth(1)
 pixmm = itd_cvter.pix_to_mm
 
 def hm2pos(hm):
@@ -118,139 +118,57 @@ base = wd.World(cam_pos=[2, 1, 3], lookat_pos=[0, 0, 1.1])
 gm.gen_frame().attach_to(base)
 robot_s = ur3d.UR3Dual()
 
-pose_hnd = robot_s.get_gl_tcp(manipulator_name="lft_arm")
-# print(pose_hnd)
-
-ini_pos = np.array([0.3, 0.1,  1.4])
-ini_rot_lft = np.array([[ 1, 0,  0],
-       [ 0 , 0, -1],
-       [ 0,  1,  0]])
-# robot_meshmodel.attach_to(base)
-center = ini_pos + np.dot(ini_rot_lft, np.array([0, -0.001*center_rad, 0]))
-
-# object = cm.CollisionModel("tape_2side_210618.stl")
-# object.set_pos(center)
-# object.set_rgba([.5, .7, .3, 1])
-# object.attach_to(base)
-
-ini_rot_rgt = np.array([[ 1, 0,  0],
-       [ 0 , 0, 1],
-       [ 0,  -1,  0]])
-
-jnt_list = []
-pre_jnt = robot_s.ik("rgt_arm", ini_pos, ini_rot_rgt, max_niter=1000)
-for theta in range(3,7):
-    rotmat = np.array([[np.cos(np.pi / 15* theta + np.pi/4), 0, np.sin(np.pi / 15 * theta + np.pi/4)], [0, 1, 0],
-                       [-np.sin(np.pi / 15 * theta + np.pi/4), 0, np.cos(np.pi / 15 * theta + np.pi/4)]])
-    rot = np.dot(rotmat, ini_rot_rgt)
-    pos = center + np.dot(rot, np.array([0, 0.001 * center_rad, 0]))
-    newjnt_rgt = robot_s.ik("rgt_arm", pos, rot)
-    if newjnt_rgt is None:
-           newjnt_rgt = robot_s.ik("rgt_arm", pos, rot, pre_jnt, max_niter=1000)
-    jnt_list.append(newjnt_rgt)
-    pre_jnt = newjnt_rgt
-
-# rgt hand hold the tape
-# jnt_rgt = robot_s.ik("rgt_arm", ini_pos, ini_rot_rgt)
+lft_jnt = np.array([0.3384285271167755, -2.4532974402057093, -1.0928729216205042, 4.816194534301758, 3.9879977703094482, 8.985321823750631])
+ur_dual_x.move_jnts("lft_arm", lft_jnt)
+robot_s.fk("lft_arm", lft_jnt)
+lft_pos, lft_rot = robot_s.get_gl_tcp("lft_arm")
+new_jnt = lft_jnt.copy()
+new_jnt[5] = new_jnt[5]+30/180*np.pi
 
 flag = 0  # 1 if edge is detected, 0 if no edge is detected.
-
 while(True):
-    ini_jnt_rgt = jnt_list[0]
     time.sleep(0.5)
-    while ur_dual_x.rgt_arm_hnd.arm.is_program_running():
+    while ur_dual_x.lft_arm_hnd.arm.is_program_running():
         pass
-    ur_dual_x.rgt_arm_hnd.move_jnts(ini_jnt_rgt)
-    time.sleep(0.5)
-    while ur_dual_x.rgt_arm_hnd.arm.is_program_running():
-        pass
-    ur_dual_x.rgt_arm_hnd.close_gripper()
+    ur_dual_x.lft_arm_hnd.close_gripper(speedpercentange=20, forcepercentage=80)  # gripper control
 
-    # ini_pos_lft = ini_pos + np.dot(ini_rot_lft, np.array([0,0.005,0]))
-    ini_pos_lft = ini_pos + np.dot(ini_rot_lft, np.array([0.005, 0, -0.045]))
-    newjnt = robot_s.ik("lft_arm",ini_pos_lft, ini_rot_lft, max_niter=1000)
-    robot_s.fk("lft_arm", newjnt)
-    print(newjnt/3.14*180)
-    ur_dual_x.lft_arm_hnd.move_jnts(newjnt)
-    # robot_meshmodel = robot_s.gen_meshmodel(toggle_tcpcs=False)
-    # robot_meshmodel.attach_to(base)
-
-    #  rotate rgt hand
-    for jnt in jnt_list:
-        if jnt is not None:
-            print("*")
-            ur_dual_x.lft_arm_hnd.open_gripper(speedpercentange=20, forcepercentage=0, fingerdistance=50)  # gripper control
-            time.sleep(0.8)
-            ur_dual_x.rgt_arm_hnd.move_jnts(jnt)
-            ur_dual_x.lft_arm_hnd.close_gripper(speedpercentange=20, forcepercentage=80)  # gripper control
-            time.sleep(0.5)
-            while ur_dual_x.lft_arm_hnd.arm.is_program_running():
-                pass
-
-            # time.sleep(0.5)
-            robot_s.fk("rgt_arm", jnt)
-            robot_meshmodel = robot_s.gen_meshmodel(toggle_tcpcs=False)
-            robot_meshmodel.attach_to(base)
-
-            #   detect the tape edge
-            dur = 0
-            theta = 0
-            # time.sleep(10)
-            count = 0
-            tic = time.time()
-
-            while (dur < 2.5):
-                return_value, image = video1.read()
-                depth, hm = itd_cvter.convert(image)
-                dz, theta1 = hm2pos(hm)
-                # print(theta1)
-                if theta1 is not None:
-                    if np.abs(theta1 - theta) < 3 / 180 * np.pi:
-                        count = count + 1
-                    else:
-                        count = 0
-                    theta = theta1
-                    if count == 5:
-                        flag = 1
-                        # break
-                dur = time.time() - tic
-            if flag == 1:
-                print(theta)
+    dur = 0
+    theta = 0
+    # time.sleep(10)
+    count = 0
+    tic = time.time()
+    while (dur < 2.5):
+        return_value, image = video1.read()
+        depth, hm = itd_cvter.convert(image)
+        dz, theta1 = hm2pos(hm)
+        # print(theta1)
+        if theta1 is not None:
+            if np.abs(theta1 - theta) < 3 / 180 * np.pi:
+                count = count + 1
+            else:
+                count = 0
+            theta = theta1
+            if count == 3:
+                flag = 1
+                print("xxxxx")
                 break
-        if flag == 1:
-            break
-            # pass
-
+        dur = time.time() - tic
     if flag == 1:
+        print(theta)
         break
-        # pass
-    ur_dual_x.rgt_arm_hnd.open_gripper(fingerdistance=85)
-    print("UUUUUU")
-# base.run()
-print(theta1)
 
-inijnt = ur_dual_x.lft_arm_hnd.get_jnt_values()
-robot_s.lft_arm.fk(inijnt)
-pose_hnd = robot_s.get_gl_tcp(manipulator_name="lft_arm")
-pos_tape = pose_hnd[0]+np.dot(pose_hnd[1], np.array([-0.02,-0.008,0]))
-newjnt = robot_s.ik("lft_arm", pos_tape, pose_hnd[1], max_niter=10000)
-ur_dual_x.lft_arm_hnd.open_gripper(fingerdistance=40)
-time.sleep(0.5)
-while ur_dual_x.lft_arm_hnd.arm.is_program_running():
-    pass
+    time.sleep(0.5)
+    while ur_dual_x.lft_arm_hnd.arm.is_program_running():
+        pass
+    ur_dual_x.lft_arm_hnd.move_jnts(new_jnt)
 
-ur_dual_x.lft_arm_hnd.move_jnts((newjnt))
+    time.sleep(0.5)
+    while ur_dual_x.lft_arm_hnd.arm.is_program_running():
+        pass
+    ur_dual_x.lft_arm_hnd.open_gripper(speedpercentange=20, forcepercentage=0, fingerdistance=50)  # gripper control
 
-inijnt = ur_dual_x.lft_arm_hnd.get_jnt_values()
-robot_s.lft_arm.fk(inijnt)
-pose_hnd = ur_dual_x.lft_arm_hnd.get_jnt_values()
-pos_tape = pose_hnd[0]+np.dot(pose_hnd[1], np.array([0,0.01,0]))
-
-rot_lft = np.array([[0,-1,0],[0,0,-1],[1,0,0]])
-pos = pos_tape + np.dot(rot_lft, np.array([0.03, 0.006, -0.0257]))
-newjnt = robot_s.ik("lft_arm", pos_tape, pose_hnd[1], max_niter=10000)
-time.sleep(0.5)
-while ur_dual_x.lft_arm_hnd.arm.is_program_running():
-    pass
-
-ur_dual_x.lft_arm_hnd.move_jnts((newjnt))
+    time.sleep(0.5)
+    while ur_dual_x.lft_arm_hnd.arm.is_program_running():
+        pass
+    ur_dual_x.lft_arm_hnd.move_jnts(lft_jnt)
+            #   detect the tape edge

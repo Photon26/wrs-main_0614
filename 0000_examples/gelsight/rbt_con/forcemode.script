@@ -44,9 +44,9 @@ def driverProg():
             textmsg("2")
             speed = get_actual_tcp_speed()
             textmsg("3")
-            contact_force = -2
+            contact_force = -1
             textmsg(contact_force)
-            force_mode(tool_pose(), [0,1,0,0,0,0],
+            force_mode(tool_pose(), [1,0,0,0,0,0],
                       [0,contact_force,0,0,0,0], 2, [0.15, 0.1, 0.1, 0.1, 0.1, 0.1])
             sync()
         end
