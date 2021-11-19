@@ -9,16 +9,17 @@ import cv2
 import img_to_depth as itd
 import time
 
-video1 = cv2.VideoCapture(0)
-itd_cvter = itd.ImageToDepth(1)
+video1 = cv2.VideoCapture(1)
+itd_cvter = itd.ImageToDepth(0)
 pixmm = itd_cvter.pix_to_mm
 
 def hm2pos(hm):
     depth_max = np.max(hm)
-    hm_map = hm / depth_max * 255
+    hm_map = hm/depth_max * 255
     border = 20
+    border2 = 90
 
-    height = np.shape(hm_map)[1]
+    width, height = np.shape(hm_map)[:]
     # hm_map[:border, :] = 0
     # hm_map[height-border: height, :] = 0
     # hm_map = hm_map[border:height-border, :]
@@ -31,7 +32,7 @@ def hm2pos(hm):
     magnitude_spectrum = 100 * np.log(np.abs(fshift))
     rows, cols = img.shape
     crow, ccol = int(rows / 2), int(cols / 2)
-    p = 25
+    p = 15
     fshift[crow - p:crow + p, ccol - p:ccol + p] = 0
     f_ishift = np.fft.ifftshift(fshift)
     img_back = np.fft.ifft2(f_ishift)
@@ -40,20 +41,20 @@ def hm2pos(hm):
     # cv2.imwrite("222.jpg", img_back)
 
     # apply canny edge detection
-    edges = cv2.Canny(img_back, 180, 200)
-    print(np.shape(edges))
-    edges = edges[border:height-border, :]
-    print(np.shape(edges))
+    edges = cv2.Canny(img_back, 250, 500)
+    # print(np.shape(edges))
+    edges = edges[border:height-border, border2:width]
+    # print(np.shape(edges))
 
     # cv2.imshow(".",edges)
     # cv2.waitKey(50)
 
     # get hough lines
     result = img.copy()
-    print(np.shape(result))
-    result = result[border:height-border, :]
+    # print(np.shape(result))
+    result = result[border:height-border, border2:width]
     # result = edges
-    print(np.shape(result))
+    # print(np.shape(result))
     lines = cv2.HoughLines(edges, 1, np.pi / 180, 20)
     # print(lines)
     # Draw line on the image
@@ -73,37 +74,40 @@ def hm2pos(hm):
         x2 = int(x0 - 1000 * (-b))
         y2 = int(y0 - 1000 * (a))
         cv2.line(result, (x1, y1), (x2, y2), (0, 0, 255), 1)
-        print(x1,y1,x2,y2)
-    if x1-x2 == 0:
+        # print(x1,y1,x2,y2)
+    if y1-y2 == 0:
         return None, None
 
     cv2.imshow("tst", result)
     cv2.waitKey(50)
-    x0 = int(centerx)
-    y0 = int(rho / b - x0 / np.tan(theta))  # center of line
-    # print(x0,y0)
-    cv2.circle(result, (x0, y0), 50, (0, 0, 255), 1)
-
-    radius = min(rho, 10)
-    mask = np.zeros((rows, cols))
-    xq, yq = np.meshgrid(np.arange(cols), np.arange(rows))
-    xq = xq - x0
-    yq = yq - y0
-    rq = xq * xq + yq * yq
-    wq = yq + xq / np.tan(theta)
-
-    mask = (rq < radius * radius).astype('uint8')
-    mask1 = (wq > rho / np.sin(theta)).astype('uint8')
-    mask2 = (wq < rho / np.sin(theta)).astype('uint8')
-
-    mask1 = mask * mask1
-    mask2 = mask * mask2
-    # sum_up = np.sum(mask1 * hm, 1)
-    # sum_low = np.sum(mask2 * hm, 1)
-
-    dz = (y0 - centery) * pixmm
+    # x0 = int(centerx)
+    # y0 = int(rho / b - x0 / np.tan(theta))  # center of line
+    # # print(x0,y0)
+    # cv2.circle(result, (x0, y0), 50, (0, 0, 255), 1)
+    #
+    # radius = min(rho, 10)
+    if abs(rho)<10:
+        return None, None
+    # mask = np.zeros((rows, cols))
+    # xq, yq = np.meshgrid(np.arange(cols), np.arange(rows))
+    # xq = xq - x0
+    # yq = yq - y0
+    # rq = xq * xq + yq * yq
+    # wq = yq + xq / np.tan(theta)
+    #
+    # mask = (rq < radius * radius).astype('uint8')
+    # mask1 = (wq > rho / np.sin(theta)).astype('uint8')
+    # mask2 = (wq < rho / np.sin(theta)).astype('uint8')
+    #
+    # mask1 = mask * mask1
+    # mask2 = mask * mask2
+    # # sum_up = np.sum(mask1 * hm, 1)
+    # # sum_low = np.sum(mask2 * hm, 1)
+    #
+    # dz = (y0 - centery) * pixmm
     if (theta > np.pi/4 and theta < np.pi/4*3) or (theta>5/4*np.pi and theta<7/4*np.pi):
         return None, None
+    dz = 0
     return dz, theta
 
 
@@ -127,11 +131,10 @@ new_jnt[5] = new_jnt[5]+30/180*np.pi
 
 flag = 0  # 1 if edge is detected, 0 if no edge is detected.
 while(True):
-    time.sleep(0.5)
+    ur_dual_x.lft_arm_hnd.close_gripper(speedpercentange=20, forcepercentage=80)  # gripper control
     while ur_dual_x.lft_arm_hnd.arm.is_program_running():
         pass
-    ur_dual_x.lft_arm_hnd.close_gripper(speedpercentange=20, forcepercentage=80)  # gripper control
-
+    time.sleep(0.5)
     dur = 0
     theta = 0
     # time.sleep(10)
@@ -141,16 +144,16 @@ while(True):
         return_value, image = video1.read()
         depth, hm = itd_cvter.convert(image)
         dz, theta1 = hm2pos(hm)
-        # print(theta1)
+        print(dz, theta1)
         if theta1 is not None:
-            if np.abs(theta1 - theta) < 3 / 180 * np.pi:
+            if np.abs(theta1 - theta) < 3 / 180 * np.pi or abs(np.abs(theta1 - theta) - np.pi) < 3 / 180 * np.pi:
                 count = count + 1
             else:
                 count = 0
             theta = theta1
-            if count == 3:
+            if count == 5:
                 flag = 1
-                print("xxxxx")
+                print("The edge is detected.")
                 break
         dur = time.time() - tic
     if flag == 1:
@@ -171,4 +174,5 @@ while(True):
     while ur_dual_x.lft_arm_hnd.arm.is_program_running():
         pass
     ur_dual_x.lft_arm_hnd.move_jnts(lft_jnt)
-            #   detect the tape edge
+
+    print("----------------------")
