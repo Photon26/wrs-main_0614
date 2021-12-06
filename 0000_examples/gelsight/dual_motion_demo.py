@@ -30,10 +30,11 @@ ini_rot_lft = np.array([[ 1, 0,  0],
 # robot_meshmodel.attach_to(base)
 center = ini_pos + np.dot(ini_rot_lft, np.array([0, -0.001*center_rad, 0]))
 
-object = cm.CollisionModel("tape_2side_210618.stl")
-object.set_pos(center)
-object.set_rgba([.5, .7, .3, 1])
-object.attach_to(base)
+# load model of tape
+# object = cm.CollisionModel("tape_2side_210618.stl")
+# object.set_pos(center)
+# object.set_rgba([.5, .7, .3, 1])
+# object.attach_to(base)
 
 ini_rot_rgt = np.array([[ 1, 0,  0],
        [ 0 , 0, 1],

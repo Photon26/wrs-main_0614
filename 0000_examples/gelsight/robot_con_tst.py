@@ -12,7 +12,7 @@ import img_to_depth as itd
 import time
 import motion.probabilistic.rrt_connect as rrtc
 
-ur_dual_x = ur3dx.UR3DualX(lft_robot_ip='10.2.0.50', rgt_robot_ip='10.2.0.51', pc_ip='10.2.0.100')
+# ur_dual_x = ur3dx.UR3DualX(lft_robot_ip='10.2.0.50', rgt_robot_ip='10.2.0.51', pc_ip='10.2.0.100')
 
 base = wd.World(cam_pos=[2,1,3], lookat_pos=[0,0,1.1])
 gm.gen_frame().attach_to(base)
@@ -20,7 +20,16 @@ robot_s = ur3d.UR3Dual()
 # lft_jnt = ur_dual_x.get_jnt_values("lft_arm")
 # print(lft_jnt)
 lft_jnt = np.array([0.3384285271167755, -2.4532974402057093, -1.0928729216205042, 4.816194534301758, 3.9879977703094482, 8.985321823750631])
-ur_dual_x.move_jnts("lft_arm", lft_jnt)
+# ur_dual_x.move_jnts("lft_arm", lft_jnt)
+
+
+# load model of tape
+object = cm.CollisionModel("tape.stl")
+object.set_pos(np.array([0.3, 0.1,  1.35]))
+object.set_scale([0.001, 0.001, 0.001])
+object.set_rgba([.5, .7, .3, 1])
+object.attach_to(base)
+
 robot_s.fk("lft_arm", lft_jnt)
 robot_meshmodel = robot_s.gen_meshmodel()
 robot_meshmodel.attach_to(base)
