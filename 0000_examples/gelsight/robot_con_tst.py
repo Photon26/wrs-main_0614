@@ -31,11 +31,14 @@ object.set_rgba([.5, .7, .3, 1])
 object.attach_to(base)
 
 robot_s.fk("lft_arm", lft_jnt)
-robot_meshmodel = robot_s.gen_meshmodel()
+robot_meshmodel = robot_s.gen_meshmodel(toggle_tcpcs=True)
 robot_meshmodel.attach_to(base)
-lft_pos, lft_rot = robot_s.get_gl_tcp("lft_arm")
-
-robot_meshmodel = robot_s.gen_meshmodel()
-robot_meshmodel.attach_to(base)
+pos, rot = robot_s.get_gl_tcp("lft_arm")
+pos = pos + rot[:3,0]*.5
+gm.gen_sphere(pos).attach_to(base)
+# lft_pos, lft_rot = robot_s.get_gl_tcp("lft_arm")
+#
+# robot_meshmodel = robot_s.gen_meshmodel()
+# robot_meshmodel.attach_to(base)
 
 base.run()

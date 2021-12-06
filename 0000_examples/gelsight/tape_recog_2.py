@@ -1,3 +1,7 @@
+"""
+    for single hnd searching for end(21.12.7)
+"""
+
 import pickle
 import robot_sim.robots.ur3_dual.ur3_dual as ur3d
 import rbt_con.force_control as ur3dx
@@ -30,26 +34,26 @@ robot_meshmodel.attach_to(base)
 lft_pos, lft_rot = robot_s.get_gl_tcp("lft_arm")
 new_jnt = lft_jnt.copy()
 new_jnt[5] = new_jnt[5]+30/180*np.pi
-# while(True):
-#     time.sleep(0.5)
-#     while ur_dual_x.lft_arm_hnd.arm.is_program_running():
-#         pass
-#     ur_dual_x.lft_arm_hnd.close_gripper(speedpercentange=20, forcepercentage=80)  # gripper control
-#
-#     time.sleep(0.5)
-#     while ur_dual_x.lft_arm_hnd.arm.is_program_running():
-#         pass
-#     ur_dual_x.lft_arm_hnd.move_jnts(new_jnt)
-#
-#     time.sleep(0.5)
-#     while ur_dual_x.lft_arm_hnd.arm.is_program_running():
-#         pass
-#     ur_dual_x.lft_arm_hnd.open_gripper(speedpercentange=20, forcepercentage=0, fingerdistance=50)  # gripper control
-#
-#     time.sleep(0.5)
-#     while ur_dual_x.lft_arm_hnd.arm.is_program_running():
-#         pass
-#     ur_dual_x.lft_arm_hnd.move_jnts(lft_jnt)
+while(True):
+    time.sleep(0.5)
+    while ur_dual_x.lft_arm_hnd.arm.is_program_running():
+        pass
+    ur_dual_x.lft_arm_hnd.close_gripper(speedpercentange=20, forcepercentage=80)  # gripper control
+
+    time.sleep(0.5)
+    while ur_dual_x.lft_arm_hnd.arm.is_program_running():
+        pass
+    ur_dual_x.lft_arm_hnd.move_jnts(new_jnt)
+
+    time.sleep(0.5)
+    while ur_dual_x.lft_arm_hnd.arm.is_program_running():
+        pass
+    ur_dual_x.lft_arm_hnd.open_gripper(speedpercentange=20, forcepercentage=0, fingerdistance=50)  # gripper control
+
+    time.sleep(0.5)
+    while ur_dual_x.lft_arm_hnd.arm.is_program_running():
+        pass
+    ur_dual_x.lft_arm_hnd.move_jnts(lft_jnt)
 
 robot_s.fk("lft_arm", new_jnt)
 robot_meshmodel = robot_s.gen_meshmodel()
