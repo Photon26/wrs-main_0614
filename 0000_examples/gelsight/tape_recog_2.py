@@ -26,7 +26,7 @@ robot_inik_solver = inik.IncrementalNIK(robot_s)
 
 # lft_jnt = ur_dual_x.get_jnt_values("lft_arm")
 # print(lft_jnt)
-lft_jnt = np.array([0.3384285271167755, -2.4532974402057093, -1.0928729216205042, 4.816194534301758, 3.9879977703094482, 8.985321823750631])
+lft_jnt = np.array([1.0276005268096924, -2.85490066209902, -1.4274213949786585, 5.163119316101074, 4.332594871520996, 8.273784224187033])
 ur_dual_x.move_jnts("lft_arm", lft_jnt)
 robot_s.fk("lft_arm", lft_jnt)
 robot_meshmodel = robot_s.gen_meshmodel()

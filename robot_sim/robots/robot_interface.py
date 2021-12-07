@@ -49,7 +49,7 @@ class RobotInterface(object):
            tgt_pos=np.array([.7,0,.7]),
            tgt_rotmat=np.eye(3),
            seed_jnt_values=None,
-           max_niter=100,
+           max_niter=1000,
            tcp_jntid=None,
            tcp_loc_pos=None,
            tcp_loc_rotmat=None,
