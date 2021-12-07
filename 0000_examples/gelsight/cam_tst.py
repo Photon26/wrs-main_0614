@@ -1,2 +1,2 @@
 from calibrate_gelsight import takeimg
-takeimg("cam2", 0, 0, "ball_4")
+takeimg("cam2", 0, 1, "tape_1")
