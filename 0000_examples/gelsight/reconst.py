@@ -3,7 +3,6 @@ import visualization.panda.world as wd
 import cv2
 import img_to_depth as itd
 import time
-from classdef import Lookuptable
 from matplotlib import pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 import numpy as np
@@ -11,9 +10,9 @@ import numpy as np
 import visualization.panda.world as world
 from modeling.geometric_model import gen_pointcloud
 
-image = cv2.imread("cam3/1.jpg")
+image = cv2.imread("cam2/tape_1.jpg")
 frame = image
-itd_cvter = itd.ImageToDepth(1)
+itd_cvter = itd.ImageToDepth(0)
 depth, hm = itd_cvter.convert(frame)
 
 # #   mathplot

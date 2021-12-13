@@ -1,6 +1,6 @@
 import pickle
 import robot_sim.robots.ur3_dual.ur3_dual as ur3d
-import robot_con.ur.ur3_dual_x as ur3dx
+import rbt_con.force_control as ur3dx
 import visualization.panda.world as wd
 import modeling.geometric_model as gm
 import modeling.collision_model as cm
@@ -118,19 +118,48 @@ center_rad = (inner_rad+outer_rad)/2
 
 ur_dual_x = ur3dx.UR3DualX(lft_robot_ip='10.2.0.50', rgt_robot_ip='10.2.0.51', pc_ip='10.2.0.100')
 
+
+def motion_stop(cn_flag, jnt = None, index = 0, path = None):
+    time.sleep(0.5)
+    while ur_dual_x.lft_arm_hnd.arm.is_program_running():
+        pass
+    while ur_dual_x.rgt_arm_hnd.arm.is_program_running():
+        pass
+
+    if cn_flag == 1:
+        cn = "lft_arm"
+    elif cn_flag == 2:
+        cn = "rgt_arm"
+    if index == 1:
+        ur_dual_x.force_mode_move_lft(path)
+    else:
+        ur_dual_x.move_jnts(cn, jnt)
+
 base = wd.World(cam_pos=[2, 1, 3], lookat_pos=[0, 0, 1.1])
 gm.gen_frame().attach_to(base)
 robot_s = ur3d.UR3Dual()
 
-lft_jnt = np.array([1.0276005268096924, -2.85490066209902, -1.4274213949786585, 5.163119316101074, 4.332594871520996, 8.273784224187033])
-ur_dual_x.move_jnts("lft_arm", lft_jnt)
+lft_jnt = np.array([1.0276005268096924, -2.85490066209902, -1.4274213949786585, 5.163119316101074, 4.332594871520996, 1.99058688])
+# take the tape
+print("-------------------move to initial position---------------------")
+motion_stop(1, lft_jnt)
 robot_s.fk("lft_arm", lft_jnt)
+# detect
 lft_pos, lft_rot = robot_s.get_gl_tcp("lft_arm")
 new_jnt = lft_jnt.copy()
 new_jnt[5] = new_jnt[5]+30/180*np.pi
 
+time.sleep(0.5)
+while ur_dual_x.lft_arm_hnd.arm.is_program_running():
+    pass
+
+ur_dual_x.lft_arm_hnd.open_gripper(speedpercentange=20, forcepercentage=0, fingerdistance=50)  # gripper control
+while ur_dual_x.lft_arm_hnd.arm.is_program_running():
+    pass
+time.sleep(0.5)
 flag = 0  # 1 if edge is detected, 0 if no edge is detected.
-while(True):
+while (True):
+    print("--------------detection start----------------")
     ur_dual_x.lft_arm_hnd.close_gripper(speedpercentange=20, forcepercentage=80)  # gripper control
     while ur_dual_x.lft_arm_hnd.arm.is_program_running():
         pass
@@ -151,7 +180,7 @@ while(True):
             else:
                 count = 0
             theta = theta1
-            if count == 5:
+            if count == 3:
                 flag = 1
                 print("The edge is detected.")
                 break
@@ -176,3 +205,53 @@ while(True):
     ur_dual_x.lft_arm_hnd.move_jnts(lft_jnt)
 
     print("----------------------")
+
+time.sleep(0.5)
+while ur_dual_x.lft_arm_hnd.arm.is_program_running():
+    pass
+ur_dual_x.lft_arm_hnd.open_gripper(speedpercentange=20, forcepercentage=0, fingerdistance=50)  # gripper control
+
+# take the nail
+lft_jnt_2 = np.array([0.8440605998039246, -3.249305073414938, -1.4211929480182093, 5.6194915771484375, 4.221709728240967, 8.435114685689108-2*np.pi])
+motion_stop(1, lft_jnt_2)
+lft_jnt_3 = np.array([0.39269161224365234, -2.1943357626544397, -2.079819981251852, 5.498745441436768, 4.005743980407715, 8.916003052388326-2*np.pi])
+lft_jnt_4 = np.array([0.24308764934539795, -2.4585965315448206, -2.055237118397848, 5.86696720123291, 3.9646644592285156, 9.109419171010153-2*np.pi])
+lft_jnt_5 = np.array([ 0.18426833, -2.04052908, -1.5584305,   5.65757132,  2.34814763,  3.46470356])
+motion_stop(1, lft_jnt_4)
+motion_stop(1, lft_jnt_3)
+time.sleep(0.5)
+while ur_dual_x.lft_arm_hnd.arm.is_program_running():
+    pass
+time.sleep(0.5)
+ur_dual_x.lft_arm_hnd.close_gripper(speedpercentange=20, forcepercentage=80)  # gripper control
+motion_stop(1, lft_jnt_4)
+
+# hold the tape
+rgt_jnt_1 = np.array([-1.01573354402651, -0.024298016224996388, 0.7465181350708008, -1.604677979146139, 1.9452768564224243, -3.5117350260363978])
+rgt_jnt_2 = np.array([-0.8750742117511194, -0.06539041200746709, 1.0466761589050293, -1.6863907019244593, 2.029642105102539, -3.445847813283102])
+rgt_jnt_3 = np.array([-1.00506002, -0.38177568,  0.76527023,  0.12596583,  1.29511535, -2.77655346])
+motion_stop(2, rgt_jnt_1)
+time.sleep(0.5)
+while ur_dual_x.rgt_arm_hnd.arm.is_program_running():
+    pass
+ur_dual_x.rgt_arm_hnd.close_gripper(speedpercentange=100, forcepercentage=80)  # gripper control
+time.sleep(2)
+while ur_dual_x.rgt_arm_hnd.arm.is_program_running():
+    pass
+motion_stop(2, rgt_jnt_2)
+motion_stop(2, rgt_jnt_3)
+motion_stop(1, lft_jnt_5)
+
+# peeling with force control
+robot_s.fk("lft_arm", lft_jnt_5)
+ini_pos, ini_rot = robot_s.get_gl_tcp("lft_arm")
+pos_endlft = ini_pos + np.dot(ini_rot, np.array([0,0,0.02]))
+pos_waypoint = ini_pos + np.dot(ini_rot, np.array([0,-0.02,0.01]))
+lft_wayjnt = robot_s.ik("lft_arm", pos_waypoint, ini_rot, max_niter=1000, seed_jnt_values=np.array(lft_jnt_5))
+lft_endjnt = robot_s.ik("lft_arm", pos_endlft, ini_rot, max_niter=1000, seed_jnt_values=np.array(lft_jnt_5))
+print(lft_endjnt)
+print(lft_wayjnt)
+
+lft_jnt_6 = np.array([ 0.21818256, -2.07567245, -1.55833465,  5.72566223,  2.33887386,  3.46465564])
+time.sleep(2)
+motion_stop(1, lft_jnt_6)
